@@ -4,8 +4,6 @@ lmc_load(Filename, Mem) :-
   read_single_line(Stream, Mem),
   close(Stream),
   write(Mem), nl.
-
-
 /*  Lettura di una singola riga dallo stream */
 read_single_line(Stream, []) :-
   at_end_of_stream(Stream), !.
@@ -13,7 +11,8 @@ read_single_line(Stream, [CompiledInstruction | OtherInstructions]) :-
   \+ at_end_of_stream(Stream),
   read_string(Stream, "\n", "", _, InstructionRaw),
   validate_instruction(InstructionRaw, Instruction),
-  compile_instruction(Instruction, CompiledInstruction)
+  split_string(Instruction, " ", "", SplittedInstruction),
+  compile_instruction(SplittedInstruction, CompiledInstruction),
   read_single_line(Stream, OtherInstructions).
 /* Pulizia degli eventuali commenti o spazi inutili e verifica della validità */
 validate_instruction(Instruction, ValidatedInstruction) :-
@@ -45,10 +44,28 @@ remove_comments_iterations([Char, Char | _], []) :-
   Char = '/', !.
 remove_comments_iterations([Char1, Char2 | Other], [Char1 | RecOther]) :-
   remove_comments_iterations([Char2 | Other], RecOther).
-
-compile_instruction(Instruction, CompiledInstruction) :-
-
-
+/* Compilazione del codice assembly */
+compile_instruction(["ADD", Param], CompiledInstruction) :-
+  concat("1", Param, CompiledInstruction), !.
+compile_instruction(["SUB", Param], CompiledInstruction) :-
+  concat("2", Param, CompiledInstruction), !.
+compile_instruction(["STA", Param], CompiledInstruction) :-
+  concat("3", Param, CompiledInstruction), !.
+compile_instruction(["LDA", Param], CompiledInstruction) :-
+  concat("5", Param, CompiledInstruction), !.
+compile_instruction(["BRA", Param], CompiledInstruction) :-
+  concat("6", Param, CompiledInstruction), !.
+compile_instruction(["BRZ", Param], CompiledInstruction) :-
+  concat("7", Param, CompiledInstruction), !.
+compile_instruction(["BRP", Param], CompiledInstruction) :-
+  concat("8", Param, CompiledInstruction), !.
+compile_instruction(["INP"], "901") :- !.
+compile_instruction(["OUT"], "902") :- !.
+compile_instruction(["HLT"], "000") :- !.
+compile_instruction(["DAT", Param], Param) :- !.
+compile_instruction(["DAT"], "0") :- !.
+compile_instruction([Instruction | _], _) :-
+  format("~s is not a valid LMC function ~n", [Instruction]), fail, !.
 /*
 compile_instructions([], []).
 compile_instructions([Instruction | OtherInstructions], [CompiledInstruction | CompiledOtherInstructions]) :-
