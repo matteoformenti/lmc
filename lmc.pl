@@ -45,33 +45,24 @@ remove_comments_iterations([Char, Char | _], []) :-
 remove_comments_iterations([Char1, Char2 | Other], [Char1 | RecOther]) :-
   remove_comments_iterations([Char2 | Other], RecOther).
 /* Compilazione del codice assembly */
-compile_instruction(["ADD", Param], CompiledInstruction) :-
+compile_instruction(["ADD", Param | _], CompiledInstruction) :-
   concat("1", Param, CompiledInstruction), !.
-compile_instruction(["SUB", Param], CompiledInstruction) :-
+compile_instruction(["SUB", Param | _], CompiledInstruction) :-
   concat("2", Param, CompiledInstruction), !.
-compile_instruction(["STA", Param], CompiledInstruction) :-
+compile_instruction(["STA", Param | _], CompiledInstruction) :-
   concat("3", Param, CompiledInstruction), !.
-compile_instruction(["LDA", Param], CompiledInstruction) :-
+compile_instruction(["LDA", Param | _], CompiledInstruction) :-
   concat("5", Param, CompiledInstruction), !.
-compile_instruction(["BRA", Param], CompiledInstruction) :-
+compile_instruction(["BRA", Param | _], CompiledInstruction) :-
   concat("6", Param, CompiledInstruction), !.
-compile_instruction(["BRZ", Param], CompiledInstruction) :-
+compile_instruction(["BRZ", Param | _], CompiledInstruction) :-
   concat("7", Param, CompiledInstruction), !.
-compile_instruction(["BRP", Param], CompiledInstruction) :-
+compile_instruction(["BRP", Param | _], CompiledInstruction) :-
   concat("8", Param, CompiledInstruction), !.
-compile_instruction(["INP"], "901") :- !.
-compile_instruction(["OUT"], "902") :- !.
-compile_instruction(["HLT"], "000") :- !.
-compile_instruction(["DAT", Param], Param) :- !.
-compile_instruction(["DAT"], "0") :- !.
+compile_instruction(["INP" | _], "901") :- !.
+compile_instruction(["OUT" | _], "902") :- !.
+compile_instruction(["HLT" | _], "000") :- !.
+compile_instruction(["DAT" | _, Param], Param) :- !.
+compile_instruction(["DAT" | _], "0") :- !.
 compile_instruction([Instruction | _], _) :-
   format("~s is not a valid LMC function ~n", [Instruction]), fail, !.
-/*
-compile_instructions([], []).
-compile_instructions([Instruction | OtherInstructions], [CompiledInstruction | CompiledOtherInstructions]) :-
-  string_chars(Instruction, CharInstruction),
-  compile_instruction(CharInstruction, CompiledInstruction),
-  compile_instructions(OtherInstructions, CompiledOtherInstructions).
-
-compile_instruction([], CompiledInstruction) :-
-*/
