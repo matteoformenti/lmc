@@ -62,7 +62,7 @@ compile_instruction(["BRP", Param | _], CompiledInstruction) :-
 compile_instruction(["INP" | _], "901") :- !.
 compile_instruction(["OUT" | _], "902") :- !.
 compile_instruction(["HLT" | _], "000") :- !.
-compile_instruction(["DAT" | _, Param], Param) :- !.
+compile_instruction(["DAT" | Param], Param) :- !.
 compile_instruction(["DAT" | _], "0") :- !.
 compile_instruction([Instruction | _], _) :-
   format("~s is not a valid LMC function ~n", [Instruction]), fail, !.
