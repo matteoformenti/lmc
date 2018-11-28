@@ -21,6 +21,7 @@ compile([Label_S, Instruction_S, Parameter_S], [Code, Parameter], LineNumber) :-
   is_valid(Label, Instruction, Parameter),
   instruction_code(Instruction, Code),
   assert(define_label(Label, LineNumber)),
+  assert(needs_label(Parameter, LineNumber)),
   format("~d_2: [label ~w] ~w ~w ~t [~w ~w]~n", [LineNumber, Label, Instruction, Parameter, Code, Parameter]), !.
 /* label instruction */
 compile([Label_S, Instruction_S], Code, LineNumber) :-
@@ -47,6 +48,7 @@ compile([Instruction_S, Parameter_S], [Code, Parameter], LineNumber) :-
   atom_string(Parameter, Parameter_S),
   is_valid(Instruction, Parameter),
   instruction_code(Instruction, Code),
+  assert(needs_label(Parameter, LineNumber)),
   format("~d_6: ~w ~w ~t [~w ~w] ~n", [LineNumber, Instruction, Parameter, Code, Parameter]), !.
 /* instruction */
 compile([Instruction_S], Code, LineNumber) :-
@@ -65,6 +67,7 @@ compile([Instruction_S, Parameter_S], [Parameter], LineNumber) :-
   atom_string(Instruction, Instruction_S),
   Instruction = dat,
   is_valid(Instruction, Parameter),
+  assert(needs_label(Parameter, LineNumber)),
   format("~d_9: ~w ~w ~t [~w] ~n", [LineNumber, Instruction, Parameter, Parameter]), !.
 /* dat index */
 compile([Instruction_S, Parameter_S], Parameter, LineNumber) :-
@@ -100,6 +103,7 @@ compile([Label_S, Instruction_S, Parameter_S], [Parameter], LineNumber) :-
   Instruction = dat,
   is_valid(Label, Instruction),
   assert(define_label(Label, LineNumber)),
+  assert(needs_label(Parameter, LineNumber)),
   format("~d_13: [label ~w] ~w ~w ~t [~w] ~n", [LineNumber, Label, Instruction, Parameter, Parameter]), !.
 /* catch all */
 compile(Input, _, LineNumber) :-
