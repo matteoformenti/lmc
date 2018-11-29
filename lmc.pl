@@ -5,29 +5,43 @@
 /* Assmbly compilation and loading */
 lmc_load(Filename, Mem) :-
   open(Filename, read, Stream),
-  read_single_line(Stream, Mem, 0),
+  read_string(Stream, _, File),
   close(Stream),
-  listing(define_label),
-  listing(needs_label).
+  split_string(File, "\n", "\n", SplitMem),
+  parse_lines(SplitMem, UnresolvedMem, 0),
+  resolve_labels(UnresolvedMem, Mem).
 
-/*  Line-By-line file reading and decoding */
-read_single_line(Stream, [], _) :-
-  at_end_of_stream(Stream), !.
-read_single_line(Stream, [Compiled | OtherInstructions], Line) :-
-  \+ at_end_of_stream(Stream),
-  read_string(Stream, "\n", "", _, Row),
-  parse_line(Row, Compiled, Line, NextLine),
-  read_single_line(Stream, OtherInstructions, NextLine), !.
-
-parse_line(Row, Compiled, Line, NextLine) :-
+/* Parse all lines and remove empty ones */
+parse_lines([], [], _).
+parse_lines([Row | NextRows], OtherInstructions, LineNumber) :-
   sanitize(Row, Sanitized),
-  string_length(Sanitized, StringLength),
-  StringLength > 0,
-  compile_instruction(Sanitized, Line, Compiled),
-  NextLine is Line+1.
-
-parse_line(Row, [], Line, NextLine) :-
+  string_length(Sanitized, Length),
+  Length = 0,
+  NextLine = LineNumber,
+  parse_lines(NextRows, OtherInstructions, NextLine), !.
+parse_lines([Row | NextRows], [CompiledRow | OtherInstructions], LineNumber) :-
   sanitize(Row, Sanitized),
-  string_length(Sanitized, StringLength),
-  StringLength = 0,
-  NextLine = Line.
+  compile_instruction(Sanitized, LineNumber, CompiledRow),
+  NextLine is LineNumber+1,
+  parse_lines(NextRows, OtherInstructions, NextLine), !.
+
+/* Resolve labels */
+resolve_labels([], []).
+resolve_labels([Instruction | Memory], [ResolvedInstruction | UnifiedMemory]) :-
+  resolve_label(Instruction, ResolvedInstruction),
+  resolve_labels(Memory, UnifiedMemory).
+
+/* do nothing in unlabeled instructions */
+resolve_label(Instruction, Instruction) :-
+  \+ is_list(Instruction), !.
+/* resolve standard labels */
+resolve_label([Instruction, Label], ResolvedInstruction) :-
+  define_label(Label, ResolvedLabel),
+  atom_concat(Instruction, ResolvedLabel, ResolvedInstruction), !.
+/* fail if label is not defined */
+resolve_label([_, Label], _) :-
+  \+ define_label(Label, _),
+  format("Label ~w is not defined~n", [Label]), fail.
+/* resolve lonley labels */
+resolve_label([Label], ResolvedLabel) :-
+  define_label(Label, ResolvedLabel), !.
