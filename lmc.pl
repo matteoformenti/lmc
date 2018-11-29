@@ -38,10 +38,15 @@ resolve_label(Instruction, Instruction) :-
 resolve_label([Instruction, Label], ResolvedInstruction) :-
   define_label(Label, ResolvedLabel),
   atom_concat(Instruction, ResolvedLabel, ResolvedInstruction), !.
-/* fail if label is not defined */
+/* fail if label is not defined*/
 resolve_label([_, Label], _) :-
   \+ define_label(Label, _),
-  format("Label ~w is not defined~n", [Label]), fail.
+  ansi_format(fg(red), "Label ~w is not defined~n", [Label]), fail.
 /* resolve lonley labels */
 resolve_label([Label], ResolvedLabel) :-
   define_label(Label, ResolvedLabel), !.
+
+/* fail if label is lonley not defined*/
+resolve_label([Label], _) :-
+  \+ define_label(Label, _),
+  ansi_format(fg(red), "Label ~w is not defined~n", [Label]), fail.
