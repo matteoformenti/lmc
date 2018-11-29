@@ -24,13 +24,11 @@ parse_lines([Row | NextRows], [CompiledRow | OtherInstructions], LineNumber) :-
   compile_instruction(Sanitized, LineNumber, CompiledRow),
   NextLine is LineNumber+1,
   parse_lines(NextRows, OtherInstructions, NextLine), !.
-
 /* Resolve labels */
 resolve_labels([], []).
 resolve_labels([Instruction | Memory], [ResolvedInstruction | UnifiedMemory]) :-
   resolve_label(Instruction, ResolvedInstruction),
   resolve_labels(Memory, UnifiedMemory).
-
 /* do nothing in unlabeled instructions */
 resolve_label(Instruction, Instruction) :-
   \+ is_list(Instruction), !.
@@ -45,7 +43,6 @@ resolve_label([_, Label], _) :-
 /* resolve lonley labels */
 resolve_label([Label], ResolvedLabel) :-
   define_label(Label, ResolvedLabel), !.
-
 /* fail if label is lonley not defined*/
 resolve_label([Label], _) :-
   \+ define_label(Label, _),
