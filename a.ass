@@ -1,15 +1,23 @@
-//ciao
+// We perfom the multiplication of two numbers
+// by using repeated addition
+        inp // get the first number
+        sta FIRST
+        inp // get the second number
+LOOP    brz END
+        sub ONE
+        sta SECOND
+        lda RESULT
+        add FIRST
+        sta RESULT
+        lda SECOND
+        bra LOOP
+// printing the result
+END     lda    RESULT
+        out
+        hlt
 
-etichetta_1 ADD 14
-SUB etichetta_1
-STA 44
-//ciao
-etichetta_3 LDA 12
-BRA 50
-BRZ 99
-BRP etichetta_1
-INP
-OUT
-etichetta_4 HLT
-DAT
-DAT etichetta_ciao
+// memory locations
+ONE     dat 1 // value "1"
+FIRST   dat // first number location
+SECOND  dat // second number location
+RESULT  dat 0 // location of the result (initially zero)

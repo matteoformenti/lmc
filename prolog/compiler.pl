@@ -107,4 +107,4 @@ compile([Label_S, Instruction_S, Parameter_S], [Parameter], LineNumber) :-
   ansi_format(fg(cyan), "~d: [label ~w] ~w ~w ~t [~w] ~n", [LineNumber, Label, Instruction, Parameter, Parameter]), !.
 /* catch all */
 compile(Input, _, LineNumber) :-
-  ansi_format(fg(red), "[COMPILATION_ERROR] line ~d [~w]~n", [LineNumber, Input]), fail.
+  ansi_format(fg(red), "[COMPILATION_ERROR] line ~d [ ~w ]~n", [LineNumber, Input]), fail.

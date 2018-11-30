@@ -28,6 +28,7 @@ parse_lines([Row | NextRows], [CompiledRow | OtherInstructions], LineNumber) :-
   compile_instruction(Sanitized, LineNumber, CompiledRow),
   NextLine is LineNumber+1,
   parse_lines(NextRows, OtherInstructions, NextLine), !.
+  
 /* Resolve labels */
 resolve_labels([], []).
 resolve_labels([Instruction | Memory], [ResolvedInstruction | UnifiedMemory]) :-
