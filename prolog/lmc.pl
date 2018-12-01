@@ -10,3 +10,5 @@ lmc_load(Filename, Mem) :-
   split_string(File, "\n", "\n", SplitMem),
   parse_lines(SplitMem, UnresolvedMem, 0),
   resolve_labels(UnresolvedMem, Mem).
+
+%one_instruction(state(Acc,PC, Mem, In, Out, Flag), state(Acc,PC, Mem, In, Out, Flag)) :-

@@ -21,7 +21,6 @@ compile([Label_S, Instruction_S, Parameter_S], [Code, Parameter], LineNumber) :-
   is_valid(Label, Instruction, Parameter),
   instruction_code(Instruction, Code),
   assertz(define_label(Label, LineNumber)),
-  assertz(needs_label(Parameter, LineNumber)),
   ansi_format(fg(cyan), "~d: [label ~w] ~w ~w ~t [~w ~w]~n", [LineNumber, Label, Instruction, Parameter, Code, Parameter]), !.
 /* label instruction */
 compile([Label_S, Instruction_S], Code, LineNumber) :-
@@ -31,8 +30,6 @@ compile([Label_S, Instruction_S], Code, LineNumber) :-
   instruction_code(Instruction, Code),
   assertz(define_label(Label, LineNumber)),
   ansi_format(fg(cyan), "~d: [label ~w] ~w ~t ~w ~n", [LineNumber, Label, Instruction, Code]), !.
-
-  /* label hlt */
 /* instruction index */
 compile([Instruction_S, Parameter_S], CompiledInstruction, LineNumber) :-
   atom_string(Instruction, Instruction_S),
@@ -103,7 +100,6 @@ compile([Label_S, Instruction_S, Parameter_S], [Parameter], LineNumber) :-
   Instruction = dat,
   is_valid(Label, Instruction),
   assertz(define_label(Label, LineNumber)),
-  assertz(needs_label(Parameter, LineNumber)),
   ansi_format(fg(cyan), "~d: [label ~w] ~w ~w ~t [~w] ~n", [LineNumber, Label, Instruction, Parameter, Parameter]), !.
 /* catch all */
 compile(Input, _, LineNumber) :-

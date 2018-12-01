@@ -26,3 +26,28 @@
 (defun apply-to-list (lst func)
     (if (null lst) nil
         (cons (funcall func (car lst)) (apply-to-list (cdr lst) func))))
+
+(defstruct nodo
+  contenuto
+  sinistra
+  destra)
+
+(defun inserisci-bst (nodo val)
+  (cond ((null nodo) (make-nodo :contenuto val))
+        ((< (nodo-contenuto nodo) val)
+          (make-nodo  :contenuto  (nodo-contenuto nodo)
+                      :sinistra   (nodo-sinistra nodo)
+                      :destra     (inserisci-bst (nodo-destra nodo) val)))
+        ((= (nodo-contenuto nodo) val) nodo)
+        ((> (nodo-contenuto nodo) val)
+          (make-nodo  :contenuto  (nodo-contenuto nodo)
+                      :sinistra   (inserisci-bst (nodo-sinistra nodo) val)
+                      :destra     (nodo-destra nodo)))
+    ))
+
+(defun cerca-bst (nodo val)
+  (cond ((null nodo) nil)
+        ((= (nodo-contenuto nodo) val) T)
+        ((> (nodo-contenuto nodo) val) (cerca-bst (nodo-sinistra nodo) val))
+        ((< (nodo-contenuto nodo) val) (cerca-bst (nodo-destra nodo) val))
+    ))
