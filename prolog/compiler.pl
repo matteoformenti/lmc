@@ -1,106 +1,38 @@
-/* Compiles a string  */
+%LINE COMPILATION
 compile_instruction(Instruction, LineNumber, Compiled) :-
-  split_string(Instruction, " ", " ", List),
-  compile(List, Compiled, LineNumber).
-/* label instruction index */
-compile([Label_S, Instruction_S, Parameter_S], CompiledInstruction, LineNumber) :-
-  atom_string(Label, Label_S),
-  atom_string(Instruction, Instruction_S),
-  atom_number(Parameter_S, Parameter),
-  is_valid(Label, Instruction, Parameter),
-  integer(Parameter),
-  assertz(define_label(Label, LineNumber)),
-  instruction_code(Instruction, Code),
-  atomic_list_concat([Code, Parameter], CompiledInstruction),
-  ansi_format(fg(cyan), "~d: [label ~w] ~w ~w ~t ~w ~n", [LineNumber, Label, Instruction, Parameter, CompiledInstruction]), !.
-/* label instruction label */
-compile([Label_S, Instruction_S, Parameter_S], [Code, Parameter], LineNumber) :-
-  atom_string(Label, Label_S),
-  atom_string(Instruction, Instruction_S),
-  atom_string(Parameter, Parameter_S),
-  is_valid(Label, Instruction, Parameter),
-  instruction_code(Instruction, Code),
-  assertz(define_label(Label, LineNumber)),
-  ansi_format(fg(cyan), "~d: [label ~w] ~w ~w ~t [~w ~w]~n", [LineNumber, Label, Instruction, Parameter, Code, Parameter]), !.
-/* label instruction */
-compile([Label_S, Instruction_S], Code, LineNumber) :-
-  atom_string(Label, Label_S),
-  atom_string(Instruction, Instruction_S),
-  is_valid(Label, Instruction),
-  instruction_code(Instruction, Code),
-  assertz(define_label(Label, LineNumber)),
-  ansi_format(fg(cyan), "~d: [label ~w] ~w ~t ~w ~n", [LineNumber, Label, Instruction, Code]), !.
-/* instruction index */
-compile([Instruction_S, Parameter_S], CompiledInstruction, LineNumber) :-
-  atom_string(Instruction, Instruction_S),
-  number_string(Parameter, Parameter_S),
-  integer(Parameter),
-  is_valid(Instruction, Parameter),
-  instruction_code(Instruction, Code),
-  atomic_list_concat([Code, Parameter], CompiledInstruction),
-  ansi_format(fg(cyan), "~d: ~w ~w ~t ~w ~n", [LineNumber, Instruction, Parameter, CompiledInstruction]), !.
-/* instruction label */
-compile([Instruction_S, Parameter_S], [Code, Parameter], LineNumber) :-
-  atom_string(Instruction, Instruction_S),
-  atom_string(Parameter, Parameter_S),
-  is_valid(Instruction, Parameter),
-  instruction_code(Instruction, Code),
-  assertz(needs_label(Parameter, LineNumber)),
-  ansi_format(fg(cyan), "~d: ~w ~w ~t [~w ~w] ~n", [LineNumber, Instruction, Parameter, Code, Parameter]), !.
-/* instruction */
-compile([Instruction_S], Code, LineNumber) :-
-  atom_string(Instruction, Instruction_S),
-  is_valid(Instruction),
-  instruction_code(Instruction, Code),
-  ansi_format(fg(cyan), "~d: ~w ~t ~w ~n", [LineNumber, Instruction, Code]), !.
-/* dat */
-compile([Instruction_S], 000, LineNumber) :-
-  atom_string(Instruction, Instruction_S),
-  Instruction = dat,
-  ansi_format(fg(cyan), "~d: ~w ~t ~w ~n", [LineNumber, dat, 000]), !.
-/* dat label */
-compile([Instruction_S, Parameter_S], [Parameter], LineNumber) :-
-  atom_string(Parameter, Parameter_S),
-  atom_string(Instruction, Instruction_S),
-  Instruction = dat,
-  is_valid(Instruction, Parameter),
-  assertz(needs_label(Parameter, LineNumber)),
-  ansi_format(fg(cyan), "~d: ~w ~w ~t [~w] ~n", [LineNumber, Instruction, Parameter, Parameter]), !.
-/* dat index */
-compile([Instruction_S, Parameter_S], Parameter, LineNumber) :-
-  number_string(Parameter, Parameter_S),
-  atom_string(Instruction, Instruction_S),
-  Instruction = dat,
-  integer(Parameter),
-  is_valid(Instruction, Parameter),
-  ansi_format(fg(cyan), "~d: ~w ~w ~t ~w ~n", [LineNumber, Instruction, Parameter, Parameter]), !.
-/* label dat */
-compile([Label_S, Instruction_S], 000, LineNumber) :-
-  atom_string(Label, Label_S),
-  atom_string(Instruction, Instruction_S),
-  Instruction = dat,
-  is_valid(Label, Instruction),
-  assertz(define_label(Label, LineNumber)),
-  ansi_format(fg(cyan), "~d: [label ~w] ~w ~t ~w ~n", [LineNumber, Label, Instruction, 000]), !.
-/* label dat index */
-compile([Label_S, Instruction_S, Parameter_S], Parameter, LineNumber) :-
-  atom_string(Label, Label_S),
-  number_string(Parameter, Parameter_S),
-  atom_string(Instruction, Instruction_S),
-  Instruction = dat,
-  is_valid(Label, Instruction),
-  integer(Parameter),
-  assertz(define_label(Label, LineNumber)),
-  ansi_format(fg(cyan), "~d: [label ~w] ~w ~w ~t ~w ~n", [LineNumber, Label, Instruction, Parameter, Parameter]), !.
-/* label dat label*/
-compile([Label_S, Instruction_S, Parameter_S], [Parameter], LineNumber) :-
-  atom_string(Parameter, Parameter_S),
-  atom_string(Label, Label_S),
-  atom_string(Instruction, Instruction_S),
-  Instruction = dat,
-  is_valid(Label, Instruction),
-  assertz(define_label(Label, LineNumber)),
-  ansi_format(fg(cyan), "~d: [label ~w] ~w ~w ~t [~w] ~n", [LineNumber, Label, Instruction, Parameter, Parameter]), !.
-/* catch all */
-compile(Input, _, LineNumber) :-
-  ansi_format(fg(red), "[COMPILATION_ERROR] line ~d [ ~w ]~n", [LineNumber, Input]), fail.
+    split_string(Instruction, " ", " ", List),
+    strings_to_atoms(List, Atoms),
+    compile(Atoms, Compiled, LineNumber).
+
+%   Compile base instructions
+compile([inp], 901, _) :- !.
+compile([out], 902, _) :- !.
+compile([hlt], 0, _) :- !.
+compile([dat], 0, _) :- !.
+%   Fail on other instructions without parameter
+compile([Instruction], _, LN) :-
+    instruction(Instruction),
+    requires_parameter(Instruction), !,
+    err(param_required, LN, Instruction),
+    fail.
+%   DAT with number parameter
+compile([dat, Number], Number, LN) :- !.
+%   Instruction with number parameter
+compile([Instruction, Number], Compiled, LN) :-
+    instruction(Instruction),
+    requires_parameter(Instruction),
+    number(Number), !,
+    valid_parameter(Number, NN, LN),
+    code(Instruction, Code),
+    atom_concat(Code, NN, Compiled).
+%   Instruction with label parameter
+compile([Instruction, Label], [Code, Label], LN) :-
+    instruction(Instruction),
+    requires_parameter(Instruction), !,
+    valid_label(Label, LN),
+    code(Instruction, Code).
+
+% Unifies when the first element is a label
+compile([Label|Rest], Compiled, LN) :-
+    asserta(define_label(Label, LN)),
+    compile(Rest, Compiled, LN).

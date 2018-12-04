@@ -69,3 +69,6 @@
   (cond ((null lst) nil)
         ((atom (cdr lst)) nil)
         (T (cons (car lst) (remove_last (cdr lst))))))
+
+(defun compose (func1 func2) (
+  (lambda (X) (funcall func1 (funcall func1 x)))))

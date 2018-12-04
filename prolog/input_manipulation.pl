@@ -1,54 +1,61 @@
-/* Input preparation, checks for comments and atomizes the string */
 sanitize(In, Out) :-
-  string_lower(In, Lower),
-  remove_comments(Lower, Out).
+    string_lower(In, Lower),
+    remove_comments(Lower, Out).
 
-/* Comments removal */
-remove_comments(Instruction, ValidatedInstruction) :-
-  string_chars(Instruction, InstructionChars),
-  remove_comments_iterations(InstructionChars, ValidatedChars),
-  string_chars(ValidatedInstruction, ValidatedChars).
+%COMMENTS REMOVAL
+remove_comments(Instruction, Validated) :-
+    string_chars(Instruction, Chars),
+    remove_comments_iterations(Chars, ValidatedChars),
+    string_chars(Validated, ValidatedChars).
+%   Base case with empty list
 remove_comments_iterations([], []) :- !.
+%   Base case with single character
 remove_comments_iterations([Char], [Char]) :- !.
-remove_comments_iterations([Char, Char | _], []) :-
-  Char = '/', !.
-remove_comments_iterations([Char1, Char2 | Other], [Char1 | RecOther]) :-
-  remove_comments_iterations([Char2 | Other], RecOther).
-
-/* Parse all lines and remove empty ones */
+%   Unifies with two forward slash followed by anything
+remove_comments_iterations([Char, Char|_], []) :-
+    Char=(/), !.
+%   Unifies with non-comment lines and recursion
+remove_comments_iterations([Char1, Char2|Other], [Char1|RecOther]) :-
+    remove_comments_iterations([Char2|Other], RecOther).
+%EMPTY LINES REMOVAL
+%   Base case
 parse_lines([], [], _).
-parse_lines([Row | NextRows], OtherInstructions, LineNumber) :-
-  sanitize(Row, Sanitized),
-  string_length(Sanitized, Length),
-  Length = 0,
-  NextLine = LineNumber,
-  parse_lines(NextRows, OtherInstructions, NextLine), !.
-parse_lines([Row | NextRows], [CompiledRow | OtherInstructions], LineNumber) :-
-  sanitize(Row, Sanitized),
-  compile_instruction(Sanitized, LineNumber, CompiledRow),
-  NextLine is LineNumber+1,
-  parse_lines(NextRows, OtherInstructions, NextLine), !.
+%   Unifies with empty lines
+parse_lines([Row|NextRows], Next, LineNumber) :-
+    sanitize(Row, Sanitized),
+    string_length(Sanitized, Length),
+    Length=0,
+    NextLine=LineNumber,
+    parse_lines(NextRows, Next, NextLine), !.
+%   Unifies with non-empty lines
+parse_lines([Row|NextRows], [CompiledRow|Next], LineNumber) :-
+    sanitize(Row, Sanitized),
+    compile_instruction(Sanitized, LineNumber, CompiledRow),
+    NextLine is LineNumber+1,
+    parse_lines(NextRows, Next, NextLine), !.
+%LABEL RESOLUTION 
+%   Base case
+resolve_labels([], [], _).
+%   This unifies with all the instructions in the non-yet-unified memory
+resolve_labels([Instruction|Memory], [ResolvedInstruction|UnifiedMemory], LN) :-
+    resolve_label(Instruction, ResolvedInstruction, LN),
+    NextLine is LN+1,
+    resolve_labels(Memory, UnifiedMemory, NextLine).
+%   This only unifies with a list containing instruction and a label
+resolve_label([Instruction, Label], ResolvedInstruction, _) :-
+    define_label(Label, ResolvedLabel), !,
+    atom_concat(Instruction, ResolvedLabel, ResolvedInstruction).
+%   Fail if label is not defined
+resolve_label([_, Label], _, LN) :-
+    err(lbl_not_defined, Label, LN), !,
+    fail.
+%   This unifies with already correct instructions and ignores them
+resolve_label(Instruction, Instruction, _) :- !.
+%   List of string to list of atoms
+string_to_atoms([], []).
+strings_to_atoms([String], [Atom]) :-
+    atom_string(Atom, String).
+strings_to_atoms([String|OtherS], [Atom|OtherA]) :-
+    atom_string(Atom, String),
+    strings_to_atoms(OtherS, OtherA).
 
-/* Resolve labels */
-resolve_labels([], []).
-resolve_labels([Instruction | Memory], [ResolvedInstruction | UnifiedMemory]) :-
-  resolve_label(Instruction, ResolvedInstruction),
-  resolve_labels(Memory, UnifiedMemory).
-/* do nothing in unlabeled instructions */
-resolve_label(Instruction, Instruction) :-
-  \+ is_list(Instruction), !.
-/* resolve standard labels */
-resolve_label([Instruction, Label], ResolvedInstruction) :-
-  define_label(Label, ResolvedLabel),
-  atom_concat(Instruction, ResolvedLabel, ResolvedInstruction), !.
-/* fail if label is not defined*/
-resolve_label([_, Label], _) :-
-  \+ define_label(Label, _),
-  ansi_format(fg(red), "Label ~w is not defined~n", [Label]), fail.
-/* resolve lonley labels */
-resolve_label([Label], ResolvedLabel) :-
-  define_label(Label, ResolvedLabel), !.
-/* fail if label is lonley not defined*/
-resolve_label([Label], _) :-
-  \+ define_label(Label, _),
-  ansi_format(fg(red), "Label ~w is not defined~n", [Label]), fail.
