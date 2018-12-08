@@ -11,4 +11,11 @@ lmc_load(Filename, Mem) :-
     split_string(File, "\n", "\n", SplitMem),
     parse_lines(SplitMem, UnresolvedMem, 0),
     resolve_labels(UnresolvedMem, Mem, 0),
+    write(Mem), nl,
     ansi_format(fg(cyan), "Input ~w compiled correctly~n", [Filename]).
+
+state(Acc, Pc, Mem, In, Out, Flag).
+
+one_instruction(State, _) :-
+    State =.. [state, Acc, Pc, Mem, In, Out, Flag],
+    write(Mem), nl.

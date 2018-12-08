@@ -1,9 +1,8 @@
 %LINE COMPILATION
 compile_instruction(Instruction, LineNumber, Compiled) :-
-    split_string(Instruction, " ", " ", List),
+    split_string(Instruction, " \t", " \t", List),
     strings_to_atoms(List, Atoms),
     compile(Atoms, Compiled, LineNumber).
-
 %   Compile base instructions
 compile([inp], 901, _) :- !.
 compile([out], 902, _) :- !.
@@ -45,7 +44,6 @@ compile([Instruction, Label], [Code, Label], LN) :-
     requires_parameter(Instruction), !,
     valid_label(Label, LN),
     code(Instruction, Code).
-
 % Unifies when the first element is a label already defined
 compile([Label|_], _, LN) :-
     define_label(Label, _), !,

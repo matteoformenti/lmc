@@ -16,10 +16,11 @@ valid_label(Label, LN) :-
 valid_label(_, _).
 %PARAMETER CHECKS
 %   Parameter is a number between 10 and 99
-valid_parameter(Parameter, Parameter, _) :-
+valid_parameter(Parameter, Atom, _) :-
     number(Parameter),
-    Parameter>10,
-    Parameter<100, !.
+    Parameter>=10,
+    Parameter<100, !,
+    atom_number(Atom, Parameter).    
 %   Parameter is a number between 0 and 10
 valid_parameter(Parameter, NP, _) :-
     number(Parameter),

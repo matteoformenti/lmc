@@ -1,7 +1,7 @@
-sanitize(In, Out) :-
+sanitize(In, L) :-
     string_lower(In, Lower),
-    remove_comments(Lower, Out).
-
+    remove_comments(Lower, Out),
+    split_string(Out, "", " \t\n", [L]).
 %COMMENTS REMOVAL
 remove_comments(Instruction, Validated) :-
     string_chars(Instruction, Chars),
@@ -24,9 +24,9 @@ parse_lines([], [], _).
 parse_lines([Row|NextRows], Next, LineNumber) :-
     sanitize(Row, Sanitized),
     string_length(Sanitized, Length),
-    Length=0,
+    Length=0, !,
     NextLine=LineNumber,
-    parse_lines(NextRows, Next, NextLine), !.
+    parse_lines(NextRows, Next, NextLine).
 %   Unifies with non-empty lines
 parse_lines([Row|NextRows], [CompiledRow|Next], LineNumber) :-
     sanitize(Row, Sanitized),
@@ -42,15 +42,17 @@ resolve_labels([Instruction|Memory], [ResolvedInstruction|UnifiedMemory], LN) :-
     NextLine is LN+1,
     resolve_labels(Memory, UnifiedMemory, NextLine).
 %   This only unifies with a list containing instruction and a label
-resolve_label([Instruction, Label], ResolvedInstruction, _) :-
+resolve_label([Instruction, Label], ResolvedInstruction, LN) :-
     define_label(Label, ResolvedLabel), !,
-    atom_concat(Instruction, ResolvedLabel, ResolvedInstruction).
+    valid_parameter(ResolvedLabel, X, LN),
+    atom_concat(Instruction, X, ResolvedInstruction).
 %   Fail if label is not defined
 resolve_label([_, Label], _, LN) :-
     err(lbl_not_defined, Label, LN), !,
     fail.
 %   This unifies with already correct instructions and ignores them
-resolve_label(Instruction, Instruction, _) :- !.
+resolve_label(Instruction, Atom, _) :-
+    atom_concat('', Instruction, Atom), !.
 %   List of string to list of atoms
 string_to_atoms([], []).
 strings_to_atoms([String], [Atom]) :-

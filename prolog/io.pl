@@ -20,7 +20,7 @@ err(param_required, LN, Instruction) :-
                 [Instruction, LN]).
 err(invalid_param, LN, P) :-
     ansi_format([fg(red), bold],
-                "Parameter on line ~w isn't valid (~w)",
+                "Parameter on line ~w isn't valid (~w)~n",
                 [LN, P]).
 err(param_overflow, LN) :-
     ansi_format([fg(red), bold],
