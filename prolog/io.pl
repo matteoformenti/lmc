@@ -39,3 +39,5 @@ err(invalid_instruction, OpCode) :-
     ansi_format([fg(red), bold],
                 "OpCode ~w is not a valid instruction~n",
                 [OpCode]).
+err(empty_input) :-
+    ansi_format([fg(red), bold], "Input queue is empty~n", []).

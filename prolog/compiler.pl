@@ -53,4 +53,3 @@ compile([Label|_], _, LN) :-
 compile([Label|Rest], Compiled, LN) :-
     asserta(define_label(Label, LN)),
     compile(Rest, Compiled, LN).
-define_label('', '').

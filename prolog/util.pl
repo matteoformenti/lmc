@@ -7,7 +7,7 @@ get_cell(Mem, Index, ValueN) :-
     nth0(Index, Mem, Value),
     atom(Value),
     atom_number(Value, ValueN).
-
+%   Wrapper for nth0 IF the result is NOT an atom
 get_cell(Mem, Index, Value) :-
     nth0(Index, Mem, Value),
     number(Value).

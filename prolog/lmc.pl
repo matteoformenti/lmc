@@ -15,8 +15,11 @@ lmc_load(Filename, PaddedMem) :-
     read_string(Stream, _, File),
     close(Stream),
     split_string(File, "\n", "\n", SplitMem),
+    asserta(define_label('', '')),
     parse_lines(SplitMem, UnresolvedMem, 0),
     resolve_labels(UnresolvedMem, Mem, 0),
+    retractall(define_label(_, _)),
+    asserta(define_label('', '')),
     memory_size(Mem, PaddedMem),
     ansi_format(fg(cyan), "Input ~w compiled correctly~n", [Filename]).
 %   Fail if memory has more than 100 elements
@@ -32,6 +35,8 @@ memory_size(Mem, PaddedMem) :-
     length(Mem, Length),
     Length<100,
     pad_memory(Mem, PaddedMem, Length).
+%   Base case
+memory_size(Mem, Mem).
 %   Recursive list padding
 pad_memory(Mem, Mem, 100) :- !.
 pad_memory(Mem, PaddedMem, X) :-

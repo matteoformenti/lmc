@@ -1,6 +1,7 @@
 :- (dynamic get_cell/3).
 :- (dynamic set_cell/4).
 :- (dynamic err/2).
+:- (dynamic err/1).
 
 %   Execute SUM
 execute(1, Cell, State, NewState) :-
@@ -59,6 +60,10 @@ execute(8, _, State, NewState) :-
     NewState=..[state, Acc, NewPc, Mem, In, Out, _], !.
 
 %   Execute INPUT
+execute(9, 1, State, NewState) :-
+    State=..[state, Acc, Pc, Mem, [], Out, Flag],
+    err(empty_input),
+    NewState=..[halted_state, Acc, Pc, Mem, [], Out, Flag], !.
 execute(9, 1, State, NewState) :-
     State=..[state, _, Pc, Mem, [HIn|TIn], Out, Flag],
     NewPc is Pc+1,
