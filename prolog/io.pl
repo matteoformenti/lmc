@@ -34,3 +34,8 @@ err(dat_param_lbl, LN) :-
     ansi_format([fg(red), bold],
                 "Instruction DAT does not accept labels as parameters on line ~w~n",
                 [LN]).
+
+err(invalid_instruction, OpCode) :-
+    ansi_format([fg(red), bold],
+                "OpCode ~w is not a valid instruction~n",
+                [OpCode]).
