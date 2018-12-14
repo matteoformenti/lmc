@@ -9,7 +9,7 @@ execute(1, Cell, State, NewState) :-
     NewAcc is Acc+Value,
     NewPc is Pc+1,
     check_flag(Acc, Flag, NewFlag),
-    NewState=[state, NewAcc, NewPc, Mem, In, Out, NewFlag], !.
+    NewState=..[state, NewAcc, NewPc, Mem, In, Out, NewFlag], !.
 
 %   Execute SUB
 execute(2, Cell, State, NewState) :-
@@ -18,57 +18,58 @@ execute(2, Cell, State, NewState) :-
     NewAcc is Acc-Value,
     NewPc is Pc+1,
     check_flag(Acc, Flag, NewFlag),
-    NewState=[state, NewAcc, NewPc, Mem, In, Out, NewFlag], !.
+    NewState=..[state, NewAcc, NewPc, Mem, In, Out, NewFlag], !.
 
 %   Execute STORE
 execute(3, Cell, State, NewState) :-
     State=..[state, Acc, Pc, Mem, In, Out, Flag],
     set_cell(Mem, Cell, Acc, NewMem),
     NewPc is Pc+1,
-    NewState=[state, Acc, NewPc, NewMem, In, Out, Flag], !.
+    NewState=..[state, Acc, NewPc, NewMem, In, Out, Flag], !.
 
 %   Execute LOAD
 execute(5, Cell, State, NewState) :-
     State=..[state, _, Pc, Mem, In, Out, Flag],
     get_cell(Mem, Cell, NewAcc),
     NewPc is Pc+1,
-    NewState=[state, NewAcc, NewPc, Mem, In, Out, Flag], !.
+    NewState=..[state, NewAcc, NewPc, Mem, In, Out, Flag], !.
 
 %   Execute BRANCH
 execute(6, Value, State, NewState) :-
     State=..[state, Acc, _, Mem, In, Out, Flag],
-    NewState=[state, Acc, Value, Mem, In, Out, Flag], !.
+    NewState=..[state, Acc, Value, Mem, In, Out, Flag], !.
 
 %   Execute BRANCH-IF-ZERO
 execute(7, BranchPc, State, NewState) :-
     State=..[state, Acc, _, Mem, In, Out, noflag],
     Acc=0, !,
-    NewState=[state, Acc, BranchPc, Mem, In, Out, noflag].
+    NewState=..[state, Acc, BranchPc, Mem, In, Out, noflag].
 execute(7, _, State, NewState) :-
-    State=..[state, Acc, Pc, Mem, In, Out, flag],
+    State=..[state, Acc, Pc, Mem, In, Out, _],
     NewPc is Pc+1,
-    NewState=[state, Acc, NewPc, Mem, In, Out, flag], !.
+    NewState=..[state, Acc, NewPc, Mem, In, Out, _], !.
 
 %   Execute BRANCH-IF-POSITIVE
 execute(8, BranchPc, State, NewState) :-
     State=..[state, Acc, _, Mem, In, Out, noflag], !,
-    NewState=[state, Acc, BranchPc, Mem, In, Out, noflag].
+    NewState=..[state, Acc, BranchPc, Mem, In, Out, noflag].
 execute(8, _, State, NewState) :-
-    State=..[state, Acc, Pc, Mem, In, Out, flag],
+    State=..[state, Acc, Pc, Mem, In, Out, _],
     NewPc is Pc+1,
-    NewState=[state, Acc, NewPc, Mem, In, Out, flag], !.
+    NewState=..[state, Acc, NewPc, Mem, In, Out, _], !.
 
 %   Execute INPUT
 execute(9, 1, State, NewState) :-
-    State=..[state, _, Pc, Mem, [HIn, TIn], Out, Flag],
+    State=..[state, _, Pc, Mem, [HIn|TIn], Out, Flag],
     NewPc is Pc+1,
-    NewState=[state, HIn, NewPc, Mem, TIn, Out, Flag], !.
+    NewState=..[state, HIn, NewPc, Mem, TIn, Out, Flag], !.
 
 %   Execute OUTPUT
 execute(9, 2, State, NewState) :-
     State=..[state, Acc, Pc, Mem, In, Out, Flag],
     NewPc is Pc+1,
-    NewState=[state, Acc, NewPc, Mem, In, [Out|Acc], Flag], !.
+    append(Out, [Acc], NewOut),
+    NewState=..[state, Acc, NewPc, Mem, In, NewOut, Flag], !.
 
 %   Execute HALT
 execute(0, _, State, NewState) :-
@@ -83,7 +84,6 @@ execute(OpCode, _, State, NewState) :-
     fail.
 
 %   Controls wheter the flag should be present or not
-check_flag(_, flag, flag) :- !.
 check_flag(Acc, _, flag) :-
     Acc>999.
 check_flag(Acc, _, flag) :-
@@ -91,4 +91,5 @@ check_flag(Acc, _, flag) :-
 check_flag(Acc, Flag, Flag) :-
     Acc>=0,
     Acc=<999.
+check_flag(_, flag, flag) :- !.
 

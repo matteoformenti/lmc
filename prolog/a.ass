@@ -1,21 +1,23 @@
-//scemochilegge
-/ciao      Add   1
-ciao'      hlt       //convert_string_atom
-      dat
-      dat   1
-1ciao  dat 999
-      dat 9
-      brz 10
-      inp
-wow   out
-      sub wow
-                //convert_string_atom
- 
-ciao  inp
- 
-      lda 0
- 
-      sta 0
- 
-//ciao //ciao//convert_string_atom
-      dat//convert_string_atom
+// We perfom the multiplication of two numbers
+// by using repeated addition
+        inp // get the first number   //901
+        sta FIRST                     //315
+        inp // get the second number  //901
+LOOP    brz END                       //711
+        sub ONE                       //214
+        sta SECOND                    //316
+        lda RESULT                    //517
+        add FIRST                     //115
+        sta RESULT                    //317
+        lda SECOND                    //516
+        bra LOOP                      //603
+// printing the result
+END     lda    RESULT                 //517
+        out                           //902
+        hlt                           //0
+    
+// memory locations
+ONE     dat 1 // value "1"            //1
+FIRST   dat // first number location  //0
+SECOND  dat // second number location //0
+RESULT  dat 0 // result               //0
