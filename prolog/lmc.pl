@@ -52,7 +52,7 @@ one_instruction(State, NewState) :-
     atom_number(OpCodeAtom, OpCode),
     atom_number(ValueAtom, Value), !,
     execute(OpCode, Value, State, NewState).
-one_instruction(State, NewState) :-
+one_instruction(State, NewState) :- !,
     State=..[state, _, Pc, Mem, _, _, _],
     get_cell(Mem, Pc, Instruction),
     atom_chars(Instruction, [OpCodeAtom]),
@@ -64,5 +64,5 @@ execution_loop(State, Out) :-
     execution_loop(NewState, Out).
 execution_loop(State, Out) :-
     one_instruction(State, NewState),
-    NewState=..[halted_state, _, _, _, _, Out, _],
+    NewState=..[halted_state, _, _, _, _, Out, _], !,
     ansi_format(fg(blue), "Execution completed~n", []).
