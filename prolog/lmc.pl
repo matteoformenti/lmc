@@ -6,7 +6,7 @@
 :- consult(util).
 
 %   Compile and run assembly file
-lmc_run(Filename, InputQueue, OutputQueue) :-
+lmc_run(Filename, InputQueue, OutputQueue) :- !,
     lmc_load(Filename, Memory),
     execution_loop(state(0, 0, Memory, InputQueue, [], noflag), OutputQueue).
 %   Compile and load assemblu file
