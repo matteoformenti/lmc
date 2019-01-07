@@ -51,24 +51,3 @@
         ((> (nodo-contenuto nodo) val) (cerca-bst (nodo-sinistra nodo) val))
         ((< (nodo-contenuto nodo) val) (cerca-bst (nodo-destra nodo) val))
     ))
-
-(defun inverti (lst)
-  (if (atom lst) lst (cons (inverti (cdr lst)) (car lst))))
-
-(defun circulte (lst mode)
-  (cond ((null lst) nil)
-        ((atom lst) lst)
-        ((eq mode 'left) (append (cdr lst) (list (car lst))))
-        ((eq mode 'right) (cons (last_in_list lst) (remove_last lst)))))
-
-
-(defun last_in_list (lst)
-  (if (null (cdr lst)) (car lst) (last_in_list (cdr lst))))
-
-(defun remove_last (lst)
-  (cond ((null lst) nil)
-        ((atom (cdr lst)) nil)
-        (T (cons (car lst) (remove_last (cdr lst))))))
-
-(defun compose (func1 func2) (
-  (lambda (X) (funcall func1 (funcall func1 x)))))
