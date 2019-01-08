@@ -1,7 +1,10 @@
 (defun lmc-load (filename) 
-  (let ((sanitized (read-file filename)))
-    (let ((lbls (search-labels sanitized)))
-    (build-memory sanitized lbls))))
+  (let* ((sanitized (read-file filename))
+        (lbls (search-labels sanitized))
+        (mem (build-memory sanitized lbls)))
+    (if (> (length mem) 100) 
+      (error "Too many intructions")
+      (append mem (make-list (- 100 (length mem)) :initial-element '0)))))
 ; Read and sanitize input file
 (defun read-file (filename)
   (with-open-file (file filename :direction :input)
@@ -53,7 +56,7 @@
       (cond ((equal instr "hlt") 0)
         ((equal instr "inp") 901)
         ((equal instr "out") 902)
-        ((equal instr "dat") 0)
+        ((equal instr "dat") 000)
         (t (error "Instruction ~A requires a parameter~%" instr))))
     (t
       ; Resolve label if present 
@@ -99,5 +102,83 @@
           (t (find-label-rec name (cdr rest))) )))
   (find-label-rec name labels))))
 
-(defun lmc-run (filneame input) 
-  ())
+; Compile and run
+(defun lmc-run (filename input)
+    (execution-loop (list 'state :acc 0 :pc 0 :mem (lmc-load filename)
+      :in input :out '() :flag 'noflag)))
+; Execution loop
+(defun execution-loop (state)
+  (if (equal (first state) 'state)
+    (execution-loop (one-instruction state)) (nth 10 state)))
+; Run a single instruction
+(defun one-instruction (state)
+  (labels ((get-e (el) (nth (+ 1 (position el state)) state))
+    (set-e (el val) (setf (nth (+ 1 (position el state)) state) val))
+    (pc () (get-e :pc))
+    (get-c (index) (nth index (get-e :mem)))
+    (set-c (index val) (setf (nth index (get-e :mem)) val))
+    (increment-pc () (set-e :pc (+ 1 (get-e :pc))))
+    (eval-flag () 
+      (cond ((> (get-e :acc) 999) (progn 
+          (set-e :acc (- (get-e :acc) 1000))
+          (set-e :flag 'flag)
+        ))
+        ((< (get-e :acc) 0) (progn 
+          (set-e :acc (+ (get-e :acc) 1000))
+          (set-e :flag 'flag)
+        )))) )
+  (progn
+    (let* ((opcode (if (= 0 (get-c (pc))) 0 (floor (/ (get-c (pc)) 100))))
+          (arg (- (get-c (pc)) (* 100 opcode))))
+    (cond 
+      ((= opcode 0) (progn (setf (nth 0 state) 'haltedstate) state))
+      ; Add to acc
+      ((= opcode 1) (progn
+        (set-e :acc (+ (get-e :acc) (get-c arg)))
+        (eval-flag)
+        (increment-pc)
+        state))
+      ; Subtract from acc
+      ((= opcode 2) (progn
+        (set-e :acc (- (get-e :acc) (get-c arg)))
+        (eval-flag)
+        (increment-pc)
+        state))
+      ; Store in memory
+      ((= opcode 3) (progn
+        (set-c arg (get-e :acc))
+        (increment-pc)
+        state))
+      ; Load from memory
+      ((= opcode 5) (progn
+        (set-e :acc (get-c arg))
+        (increment-pc)
+        state))
+      ; Branch
+      ((= opcode 6) (progn (set-e :pc arg) state))
+      ; Branch if zero
+      ((= opcode 7) (progn (if (and (= 0 (get-e :acc)) 
+          (equal 'noflag (get-e :flag)))
+            (set-e :pc arg) 
+            (increment-pc))
+        state))
+      ; Branch if positive
+      ((= opcode 8) (progn (if (equal 'noflag (get-e :flag))
+          (set-e :pc arg) 
+          (increment-pc))
+        state))
+      ; Move first input to acc
+      ((= (get-c (pc)) 901) (if (null (get-e :in))
+        (error "Empty input list")
+        (progn
+          (set-e :acc (car (get-e :in)))
+          (set-e :in (cdr (get-e :in)))
+          (increment-pc)
+          state)))
+      ; Copy acc to output
+      ((= (get-c (pc)) 902) (progn
+        (set-e :out (append (get-e :out) (list (get-e :acc))))
+        (increment-pc)
+        state))
+      (t (error "Invalid instruction ~W~W~%" opcode arg))
+    )))))

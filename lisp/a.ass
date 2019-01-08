@@ -11,6 +11,7 @@ LOOP    brz END
         sta RESULT
         lda SECOND
         bra LOOP
+
 // printing the result
 END     lda    RESULT
         out
