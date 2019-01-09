@@ -10,8 +10,9 @@
   (with-open-file (file filename :direction :input)
     (labels ((read-helper ()
 	      (let ((line (read-line file nil nil)))
-		      (when line (let ((parsed (parse-line line)))
-              (if parsed (cons parsed (read-helper)) (read-helper)))))))  
+		      (when line (let ((parsed (str-split 
+                (remove-comments (string-downcase line)))))
+            (if parsed (cons parsed (read-helper)) (read-helper)))))))  
       (read-helper))))
 
 ; Returns a list of (label_name value)
@@ -23,14 +24,6 @@
       (if (> (length lines) 1)
         (search-labels (cdr lines) (+ 1 row)) 
         nil))))
-
-;
-(defun parse-line (line) 
-  (reformat-line line))
-
-;
-(defun reformat-line (line) 
-  (str-split (remove-comments (string-downcase line))))
 
 ; Remove comments from a line
 (defun remove-comments (line) 
