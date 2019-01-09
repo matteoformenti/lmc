@@ -173,5 +173,5 @@
         (set-e :out (append (get-e :out) (list (get-e :acc))))
         (increment-pc)
         state))
-      (t (error "Invalid instruction ~W~W~%" opcode arg))
+      (t (error "Invalid instruction ~W~%" (get-c (pc))))
     )))))
