@@ -1,3 +1,4 @@
+; Compile assembly file
 (defun lmc-load (filename) 
   (let* ((sanitized (read-file filename))
         (lbls (search-labels sanitized))
@@ -8,22 +9,19 @@
 ; Read and sanitize input file
 (defun read-file (filename)
   (with-open-file (file filename :direction :input)
-    (labels ((read-helper ()
-	      (let ((line (read-line file nil nil)))
-		      (when line (let ((parsed (str-split 
-                (remove-comments (string-downcase line)))))
-            (if parsed (cons parsed (read-helper)) (read-helper)))))))  
+    (labels ((read-helper () (let ((line (read-line file nil nil)))
+      (when line (let ((parsed (str-split (remove-comments (string-downcase line)))))
+        (if parsed (cons parsed (read-helper)) (read-helper)))))))  
       (read-helper))))
 
 ; Returns a list of (label_name value)
 (defun search-labels (lines &optional (row 0))
   (let ((possible-label (first (car lines))))
     (if (is-label possible-label) 
-      (cons (cons possible-label (cons row nil)) 
+      (list possible-label row) 
         (if (> (length lines) 1) (search-labels (cdr lines) (+ 1 row)) nil))
       (if (> (length lines) 1)
-        (search-labels (cdr lines) (+ 1 row)) 
-        nil))))
+        (search-labels (cdr lines) (+ 1 row)) nil))))
 
 ; Remove comments from a line
 (defun remove-comments (line) 
@@ -31,16 +29,14 @@
 
 ; Splits a line at each space ignoring multiple spaces
 (defun str-split (l) 
-  (let ((pos (search " " l))) 
-    (cond ((not pos) (if (= 0 (length l)) nil (list l)))
-          ((= pos 0) (str-split (subseq l (+ 1 pos))))
-          ((> pos 0) (cons (subseq l 0 pos)
-                          (str-split (subseq l (+ 1 pos))))))))
+  (let ((p (search " " l))) 
+    (cond ((not p) (if (= 0 (length l)) nil (list l)))
+          ((= p 0) (str-split (subseq l (+ 1 p))))
+          ((> p 0) (cons (subseq l 0 p) (str-split (subseq l (+ 1 p))))))))
 
 ; Checks if a word is a valid label (not numeric and not reserved)
 (defun is-label (word) 
-  (and 
-   (not (ignore-errors (parse-integer word)))
+  (and (not (ignore-errors (parse-integer word)))
     (not (position word `("add" "sub" "sta" "lda" "bra" "brz" "brp" "dat" "inp" "out" "hlt") :test #'string=))))
 ; Build line to machine code
 (defun build-instr (instr labels &optional (param nil)) 
@@ -111,12 +107,10 @@
     (get-c (index) (nth index (get-e :mem)))
     (set-c (index val) (setf (nth index (get-e :mem)) val))
     (increment-pc () (set-e :pc (+ 1 (get-e :pc))))
-    (eval-flag () 
-      (cond ((> (get-e :acc) 999) (progn 
+    (eval-flag () (cond ((> (get-e :acc) 999) (progn 
           (set-e :acc (- (get-e :acc) 1000))
           (set-e :flag 'flag)
-        ))
-        ((< (get-e :acc) 0) (progn 
+        ))  ((< (get-e :acc) 0) (progn 
           (set-e :acc (+ (get-e :acc) 1000))
           (set-e :flag 'flag)
         )))) )
@@ -125,53 +119,32 @@
           (arg (- (get-c (pc)) (* 100 opcode))))
     (cond 
       ((= opcode 0) (progn (setf (nth 0 state) 'haltedstate) state))
-      ; Add to acc
       ((= opcode 1) (progn
         (set-e :acc (+ (get-e :acc) (get-c arg)))
         (eval-flag)
-        (increment-pc)
-        state))
-      ; Subtract from acc
+        (increment-pc) state))
       ((= opcode 2) (progn
         (set-e :acc (- (get-e :acc) (get-c arg)))
         (eval-flag)
-        (increment-pc)
-        state))
-      ; Store in memory
+        (increment-pc) state))
       ((= opcode 3) (progn
         (set-c arg (get-e :acc))
-        (increment-pc)
-        state))
-      ; Load from memory
+        (increment-pc) state))
       ((= opcode 5) (progn
         (set-e :acc (get-c arg))
-        (increment-pc)
-        state))
-      ; Branch
+        (increment-pc) state))
       ((= opcode 6) (progn (set-e :pc arg) state))
-      ; Branch if zero
       ((= opcode 7) (progn (if (and (= 0 (get-e :acc)) 
-          (equal 'noflag (get-e :flag)))
-            (set-e :pc arg) 
-            (increment-pc))
-        state))
-      ; Branch if positive
+          (equal 'noflag (get-e :flag))) (set-e :pc arg) 
+            (increment-pc)) state))
       ((= opcode 8) (progn (if (equal 'noflag (get-e :flag))
-          (set-e :pc arg) 
-          (increment-pc))
-        state))
-      ; Move first input to acc
+          (set-e :pc arg) (increment-pc)) state))
       ((= (get-c (pc)) 901) (if (null (get-e :in))
         (error "Empty input list")
-        (progn
-          (set-e :acc (car (get-e :in)))
+        (progn (set-e :acc (car (get-e :in)))
           (set-e :in (cdr (get-e :in)))
-          (increment-pc)
-          state)))
-      ; Copy acc to output
+          (increment-pc) state)))
       ((= (get-c (pc)) 902) (progn
         (set-e :out (append (get-e :out) (list (get-e :acc))))
-        (increment-pc)
-        state))
-      (t (error "Invalid instruction ~W~%" (get-c (pc))))
-    )))))
+        (increment-pc) state))
+      (t (error "Invalid instruction ~W~%" (get-c (pc)))) )))))
