@@ -28,5 +28,5 @@ Implementation of "little man computer" by Matteo Formenti in prolog and common 
 
 ## Version
 
-- **Prolog** SWI-Prolog 7.6.4 on Ubuntu 18.04
-- **Lisp** Clisp 2.49.92 (2018-02-18) on Ubuntu 18.04
+- **Prolog** SWI-Prolog 7.6.4 on Ubuntu 18.10
+- **Lisp** Clisp 2.49.92 (2018-02-18) on Ubuntu 18.10
