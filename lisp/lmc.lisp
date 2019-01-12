@@ -18,10 +18,11 @@
 (defun search-labels (lines &optional (row 0))
   (let ((possible-label (first (car lines))))
     (if (is-label possible-label) 
-      (list possible-label row) 
+      (cons (cons possible-label (cons row nil)) 
         (if (> (length lines) 1) (search-labels (cdr lines) (+ 1 row)) nil))
       (if (> (length lines) 1)
-        (search-labels (cdr lines) (+ 1 row)) nil))))
+        (search-labels (cdr lines) (+ 1 row)) 
+        nil))))
 
 ; Remove comments from a line
 (defun remove-comments (line) 
@@ -47,10 +48,10 @@
         ((equal instr "out") 902)
         ((equal instr "dat") 000)
         (t (error "Instruction ~A requires a parameter~%" instr))))
-    (t
-      ; Resolve label if present 
-      (let ((param (if (is-label param) 
+    (t (let ((param (if (is-label param) 
             (find-label param labels) (parse-integer param))))
+          (if (and (or (< param 0) (> param 99)) (not (equal instr "dat")))
+          (error "Invalid parameter ~W~%" param)
           (cond 
             ((equal instr "add") (+ 100 param))
             ((equal instr "sub") (+ 200 param))
@@ -59,8 +60,8 @@
             ((equal instr "bra") (+ 600 param))
             ((equal instr "brz") (+ 700 param))
             ((equal instr "brp") (+ 800 param))
-            ((equal instr "dat") param))))
-    (t (error "Invalid line ~W~%" instr ))))
+            ((equal instr "dat") param)
+            (t (error "Invalid line ~W~%" instr ))))))))
 ; Build memory
 (defun build-memory (mem labels) 
   (if (null mem) nil 
