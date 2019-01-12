@@ -1,3 +1,4 @@
+%   Matteo Formenti 830594
 %   Unify if word is an instruction
 instruction(Word) :-
     member(Word, [add, sub, sta, lda, bra, brz, brp, inp, out, dat, hlt]).

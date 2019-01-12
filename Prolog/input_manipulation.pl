@@ -1,3 +1,4 @@
+%   Matteo Formenti 830594
 sanitize(In, L) :-
     string_lower(In, Lower),
     remove_comments(Lower, Out),

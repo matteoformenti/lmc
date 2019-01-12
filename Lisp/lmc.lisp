@@ -1,3 +1,5 @@
+; Matteo Formenti 830594
+
 ; Compile assembly file
 (defun lmc-load (filename) 
   (let* ((sanitized (read-file filename))
